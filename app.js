@@ -17,6 +17,7 @@
   const byId = new Map(book.sheets.map(s=>[s.id,s]));
   const byName = new Map(book.sheets.map(s=>[s.name,s]));
   const categories = [...new Set(book.sheets.map(s=>s.category))];
+  const JESUS_SHEET = book.sheets.find(s=>s.name==='OT-耶穌家譜') || book.sheets.find(s=>String(s.name).includes('耶穌家譜')) || null;
   const SIDEBAR_ICONS = {
     all:'<path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v6H4zM13 14h7v6h-7z"/>',
     '聖經概覽':'<path d="M4 5h7a4 4 0 0 1 4 4v11H8a4 4 0 0 0-4 0zM20 5h-6a4 4 0 0 0-4 4v11h6a4 4 0 0 1 4 0z"/>',
@@ -25,11 +26,12 @@
     '新約研究':'<path d="M12 3v18M5 9h14M4 4h16v16H4z"/>',
     '家譜研究':'<path d="M12 3v6M5 15v-4h14v4M5 15v6M12 15v6M19 15v6M3 21h4M10 21h4M17 21h4"/>',
     '教會歷史':'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 3"/>',
-    '神學與要理':'<path d="M12 3v18M5 9h14M4 4h16v16H4z"/>'
+    '神學與要理':'<path d="M12 3v18M5 9h14M4 4h16v16H4z"/>',
+    '耶穌家譜':'<path d="M12 3v5M8 8h8M5 13h14M7 13v7M12 13v7M17 13v7M5 20h4M10 20h4M15 20h4"/>'
   };
   const icon = (which,cls='') => `<svg ${cls ? 'class="'+cls+'"' : ''} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round" stroke-linecap="round">${SIDEBAR_ICONS[which]||SIDEBAR_ICONS.all}</svg>`;
   const searchSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.8 4.8"/></svg>';
-  const state = {theme:'light', category:'all',sheet:null,viewMode:'',boardZoom:1,tableFilter:'',tableLimit:90,searchLimit:70,focus:null,toastTimeout:null};
+  const state = {theme:'light', category:'all',sheet:null,viewMode:'',boardZoom:1,tableFilter:'',tableLimit:90,searchLimit:70,focus:null,toastTimeout:null,sidebarCollapsed:false};
   const dataMap = new WeakMap();
   function cellMap(sheet){
     if(!dataMap.has(sheet)) dataMap.set(sheet,new Map(sheet.cells.map(c=>[c[0]+':'+c[1],c])));
@@ -51,9 +53,35 @@
   function closeMenu(){ $('#sidebar').classList.remove('open');$('#mobile-scrim').classList.remove('show');}
   function setTop(section,page){$('#top-section').textContent=section;$('#top-page').textContent=page;document.title=(page==='首頁'?'聖經概覽':page+'｜聖經概覽');}
   function renderNav(){
-    let r=getRoute();let active=r.section==='home'?'all':r.section==='category'?r.arg:r.section==='sheet'?byId.get(r.arg)?.category:'none';
-    $('#side-nav').innerHTML=[{key:'all',count:book.sheets.length},...categories.map(key=>({key,count:book.sheets.filter(s=>s.category===key).length}))].map(({key,count})=>
-      `<button class="nav-item ${key===active?'active':''}" data-cat="${esc(key)}">${icon(key)}<span>${key==='all'?'所有資料':esc(key)}</span><span class="nav-count">${count}</span></button>`).join('');
+    let r=getRoute();
+    let active=r.section==='home'?'all':r.section==='category'?r.arg:r.section==='sheet'?byId.get(r.arg)?.category:'none';
+    const quick=[];
+    if(JESUS_SHEET){
+      quick.push(`<button class="nav-item quick-item ${r.section==='sheet'&&r.arg===JESUS_SHEET.id?'active':''}" data-sheet="${JESUS_SHEET.id}" title="耶穌家譜">${icon('耶穌家譜')}<span>耶穌家譜</span><span class="nav-pill">Quick</span></button>`);
+    }
+    const categoryItems=[{key:'all',count:book.sheets.length},...categories.map(key=>({key,count:book.sheets.filter(s=>s.category===key).length}))].map(({key,count})=>
+      `<button class="nav-item ${key===active?'active':''}" data-cat="${esc(key)}" title="${key==='all'?'所有資料':esc(key)}">${icon(key)}<span>${key==='all'?'所有資料':esc(key)}</span><span class="nav-count">${count}</span></button>`).join('');
+    $('#side-nav').innerHTML=`${quick.length?`<div class="nav-group"><div class="nav-group-title">快速入口</div>${quick.join('')}</div>`:''}<div class="nav-group"><div class="nav-group-title">分類導覽</div>${categoryItems}</div>`;
+  }
+  function initUIState(){
+    try{state.sidebarCollapsed = localStorage.getItem('bible-site-sidebar')==='collapsed';}catch(e){}
+    applySidebarCollapsed();
+  }
+  function applySidebarCollapsed(){
+    const shell=$('.app-shell');
+    shell?.classList.toggle('sidebar-collapsed', !!state.sidebarCollapsed && window.innerWidth>900);
+    const btn=$('#sidebar-toggle');
+    if(btn){
+      btn.setAttribute('aria-label', state.sidebarCollapsed?'展開側邊欄':'收合側邊欄');
+      btn.setAttribute('title', state.sidebarCollapsed?'展開側邊欄':'收合側邊欄');
+      btn.classList.toggle('collapsed', !!state.sidebarCollapsed);
+    }
+  }
+  function toggleSidebarCollapsed(){
+    if(window.innerWidth<=900){ $('#sidebar').classList.toggle('open');$('#mobile-scrim').classList.toggle('show'); return; }
+    state.sidebarCollapsed=!state.sidebarCollapsed;
+    try{localStorage.setItem('bible-site-sidebar', state.sidebarCollapsed?'collapsed':'expanded');}catch(e){}
+    applySidebarCollapsed();
   }
   function initTheme(){let stored='';try{stored=localStorage.getItem('bible-site-theme')||'';}catch(e){} state.theme=stored|| (window.matchMedia?.('(prefers-color-scheme: dark)').matches?'dark':'light');applyTheme();}
   function applyTheme(){document.documentElement.dataset.theme=state.theme;$('#theme-symbol').textContent=state.theme==='dark'?'☀':'☾';$('#theme-label').textContent=state.theme==='dark'?'淺色模式':'深色模式';let meta=$('meta[name=theme-color]');if(meta)meta.content=state.theme==='dark'?'#101816':'#f6f7f5';}
@@ -209,7 +237,11 @@
     const r=c[0],col=c[1];return s.merges.find(m=>m[0]===r&&m[1]===col)||[r,col,r,col];
   }
   function renderBoardViewer(s){
-    return `<section class="viewer-card" id="view-panel"><div class="viewer-toolbar"><div class="toolbar-left"><button class="tool-btn ${state.viewMode==='list'?'selected':''}" data-board-mode="list">文字閱讀</button><button class="tool-btn ${state.viewMode==='board'?'selected':''}" data-board-mode="board">關係圖譜</button><span class="toolbar-hint">${s.links.length?'綠色節點可點擊延伸家譜':''}</span></div><div class="toolbar-right"><div class="board-zoom-controls ${state.viewMode==='list'?'hidden':''}" id="board-zoom-controls"><button type="button" class="tool-btn slim" data-zoom="out" aria-label="縮小">−</button><button type="button" class="tool-btn slim" data-zoom="reset" id="zoom-label">100%</button><button type="button" class="tool-btn slim" data-zoom="in" aria-label="放大">＋</button></div></div></div><div id="board-content"></div><div class="board-explainer">${s.name.startsWith('(G)-')||s.name==='OT-耶穌家譜'?'關係圖譜盡量保留來源檔案中的人物位置和連線。點擊綠色人名即可跳轉延伸家譜；可利用右上角「＋／−」縮放。':'文字閱讀適合手機，關係圖譜適合橫向閱讀大型資料。點選含有註解的內容可閱讀完整來源文字。'}</div></section><p class="viewer-help">原始 Excel 是完整內容依據；「文字閱讀」只改變排列方式，不會改寫或增減原文。</p>${s.images.length?renderSupplementImages(s):''}`;
+    const isJesus = JESUS_SHEET && s.id===JESUS_SHEET.id;
+    const isGenealogy = s.category==='家譜研究' || isJesus;
+    const jumpButtons = state.viewMode==='list'?'':`<button type="button" class="tool-btn slim" data-scroll-board="top">置頂</button><button type="button" class="tool-btn slim" data-scroll-board="bottom">到底</button>`;
+    const hero = isJesus ? `<div class="genealogy-hero"><div><span class="genealogy-kicker">GENEALOGY · JESUS</span><h2>耶穌家譜</h2><p>將原始 Excel 的家譜結構改為更清楚的閱讀體驗：保留人物位置與延伸連結，同時以更乾淨的版面呈現。</p></div><div class="genealogy-hero-meta"><span>${s.links.length} 個延伸連結</span><span>${s.cells.length} 個節點來源</span></div></div>` : '';
+    return `<section class="viewer-card ${isGenealogy?'genealogy-showcase':''}" id="view-panel">${hero}<div class="viewer-toolbar"><div class="toolbar-left"><button class="tool-btn ${state.viewMode==='list'?'selected':''}" data-board-mode="list">文字閱讀</button><button class="tool-btn ${state.viewMode==='board'?'selected':''}" data-board-mode="board">關係圖譜</button><span class="toolbar-hint">${s.links.length?'綠色節點可點擊延伸家譜':''}</span></div><div class="toolbar-right">${jumpButtons}<div class="board-zoom-controls ${state.viewMode==='list'?'hidden':''}" id="board-zoom-controls"><button type="button" class="tool-btn slim" data-zoom="out" aria-label="縮小">−</button><button type="button" class="tool-btn slim" data-zoom="reset" id="zoom-label">100%</button><button type="button" class="tool-btn slim" data-zoom="in" aria-label="放大">＋</button></div></div></div><div id="board-content"></div><div class="board-explainer">${s.name.startsWith('(G)-')||s.name==='OT-耶穌家譜'?'關係圖譜盡量保留來源檔案中的人物位置和連線。點擊綠色人名即可跳轉延伸家譜；可利用右上角「＋／−」縮放。現在支援自然卷動閱讀，也可按「到底」快速前往末端。':'文字閱讀適合手機，關係圖譜適合橫向閱讀大型資料。點選含有註解的內容可閱讀完整來源文字。'}</div></section><p class="viewer-help">原始 Excel 是完整內容依據；「文字閱讀」只改變排列方式，不會改寫或增減原文。</p>${s.images.length?renderSupplementImages(s):''}`;
   }
   function buildBoardContent(s){
     const el=$('#board-content');if(!el)return;
@@ -239,7 +271,7 @@
       const attributes=linked?`data-link="${esc(c[5])}"`:(note||text)?`data-note="${s.id}|${refOf(c)}"`:'';
       return `<div class="${classes}" style="left:${left}px;top:${top}px;width:${Math.max(23,width)}px;height:${Math.max(16,height)}px" title="${safeTitle}" ${attributes} data-cell="${refOf(c)}" role="${linked||note?'button':'group'}" ${linked||note?'tabindex="0"':''}>${esc(text||'ⓘ')}</div>`;
     }).join('');
-    el.innerHTML=`<div class="board-viewport" id="board-viewport"><div class="board-sizer" id="board-sizer" style="position:relative;width:${dim.w}px;height:${dim.h}px"><div class="board-stage" id="board-stage" style="width:${dim.w}px;height:${dim.h}px"><div class="board-background" style="background-image:url('${s.boardBg}')"></div>${nodes}</div></div></div>`;
+    el.innerHTML=`<div class="board-viewport ${(s.category==='家譜研究'||(JESUS_SHEET&&s.id===JESUS_SHEET.id))?'genealogy-viewport':''}" id="board-viewport"><div class="board-sizer" id="board-sizer" style="position:relative;width:${dim.w}px;height:${dim.h}px"><div class="board-stage" id="board-stage" style="width:${dim.w}px;height:${dim.h}px"><div class="board-background" style="background-image:url('${s.boardBg}')"></div>${nodes}</div></div></div>`;
     setZoom(state.boardZoom, true);
   }
   function setZoom(value,preserve){
@@ -265,7 +297,13 @@
         const dim=dimensions(s);const viewport=$('#board-viewport');if(!viewport)return;
         let x=dim.x[Math.min(col-1,dim.x.length-1)]||0,y=dim.y[Math.min(row-1,dim.y.length-1)]||0;
         viewport.scrollLeft=Math.max(0,x*state.boardZoom-viewport.clientWidth*.32);
-        viewport.scrollTop=Math.max(0,y*state.boardZoom-viewport.clientHeight*.3);
+        const hasInternalY = viewport.scrollHeight > viewport.clientHeight + 4 && getComputedStyle(viewport).overflowY !== 'visible';
+        if(hasInternalY) viewport.scrollTop=Math.max(0,y*state.boardZoom-viewport.clientHeight*.3);
+        else {
+          const rect=viewport.getBoundingClientRect();
+          const pageTop=window.scrollY + rect.top + y*state.boardZoom;
+          window.scrollTo({top:Math.max(0,pageTop-160),behavior:'smooth'});
+        }
       }
     }else if(s.view==='table'){
       const el=state.viewMode==='cards'? $(`[data-row="${row}"]`,$('#table-content')) : $(`td[data-row="${row}"][data-col="${col}"]`,$('#table-content'));
@@ -324,7 +362,7 @@
 
   document.addEventListener('click',event=>{
     const target=event.target;
-    if(target.closest('#menu-btn')){$('#sidebar').classList.toggle('open');$('#mobile-scrim').classList.toggle('show');return;}
+    if(target.closest('#menu-btn')||target.closest('#sidebar-toggle')){toggleSidebarCollapsed();return;}
     if(target.closest('#mobile-scrim')){closeMenu();return;}
     if(target.closest('#theme-btn')){toggleTheme();return;}
     if(target.closest('#search-shortcut')){navSearch('');setTimeout(()=>$('#results-query')?.focus(),80);return;}
@@ -340,6 +378,7 @@
     const tableMode=target.closest('[data-table-mode]');if(tableMode&&state.sheet){state.viewMode=tableMode.dataset.tableMode;$$('[data-table-mode]').forEach(x=>x.classList.toggle('selected',x===tableMode));buildTableContent(state.sheet);if(state.focus)setTimeout(()=>focusOn(state.sheet,state.focus),30);return;}
     const boardMode=target.closest('[data-board-mode]');if(boardMode&&state.sheet){state.viewMode=boardMode.dataset.boardMode;$$('[data-board-mode]').forEach(x=>x.classList.toggle('selected',x===boardMode));buildBoardContent(state.sheet);if(state.focus)setTimeout(()=>focusOn(state.sheet,state.focus),60);return;}
     const zoom=target.closest('[data-zoom]');if(zoom){let op=zoom.dataset.zoom;setZoom(op==='in'?state.boardZoom*1.2:op==='out'?state.boardZoom/1.2:1,true);return;}
+    const boardScroll=target.closest('[data-scroll-board]');if(boardScroll){const vp=$('#board-viewport');if(vp){const to=boardScroll.dataset.scrollBoard==='bottom' ? vp.offsetTop + vp.scrollHeight + 40 : Math.max(0,vp.offsetTop-120);window.scrollTo({top:to,behavior:'smooth'});}return;}
     if(target.closest('#load-more')&&state.sheet){state.tableLimit+=90;buildTableContent(state.sheet);return;}
     if(target.closest('#search-load')){state.searchLimit+=70;buildResults(getRoute().query.get('q')||'');return;}
   });
@@ -356,7 +395,7 @@
   });
   window.addEventListener('hashchange',route);
   $('#theme-btn').addEventListener('click',event=>event.preventDefault());
-  initTheme();route();
+  initUIState();initTheme();window.addEventListener('resize',applySidebarCollapsed);route();
   } // End startApplication, called only after Firestore data is available.
   window.addEventListener('bible-workbook-ready', startApplication);
   if (window.BIBLE_WORKBOOK) startApplication();
