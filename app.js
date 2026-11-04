@@ -18,6 +18,7 @@
   const byName = new Map(book.sheets.map(s=>[s.name,s]));
   const categories = [...new Set(book.sheets.map(s=>s.category))];
   const JESUS_SHEET = book.sheets.find(s=>s.name==='OT-耶穌家譜') || book.sheets.find(s=>String(s.name).includes('耶穌家譜')) || null;
+  const isGenealogy = s => !!s && s.view==='board' && (s.category==='家譜研究'||s.id===JESUS_SHEET?.id);
   const SIDEBAR_ICONS = {
     all:'<path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v6H4zM13 14h7v6h-7z"/>',
     '聖經概覽':'<path d="M4 5h7a4 4 0 0 1 4 4v11H8a4 4 0 0 0-4 0zM20 5h-6a4 4 0 0 0-4 4v11h6a4 4 0 0 1 4 0z"/>',
@@ -61,7 +62,8 @@
     }
     const categoryItems=[{key:'all',count:book.sheets.length},...categories.map(key=>({key,count:book.sheets.filter(s=>s.category===key).length}))].map(({key,count})=>
       `<button class="nav-item ${key===active?'active':''}" data-cat="${esc(key)}" title="${key==='all'?'所有資料':esc(key)}">${icon(key)}<span>${key==='all'?'所有資料':esc(key)}</span><span class="nav-count">${count}</span></button>`).join('');
-    $('#side-nav').innerHTML=`${quick.length?`<div class="nav-group"><div class="nav-group-title">快速入口</div>${quick.join('')}</div>`:''}<div class="nav-group"><div class="nav-group-title">分類導覽</div>${categoryItems}</div>`;
+    $('#side-quick').innerHTML=quick.length?`<div class="nav-group"><div class="nav-group-title">快速入口</div>${quick.join('')}</div>`:'';
+    $('#side-nav').innerHTML=`<div class="nav-group"><div class="nav-group-title">分類導覽</div>${categoryItems}</div>`;
   }
   function initUIState(){
     try{state.sidebarCollapsed = localStorage.getItem('bible-site-sidebar')==='collapsed';}catch(e){}
@@ -143,7 +145,9 @@
     setTop(s.category,s.name);
     let which=s.view==='images'?renderImageViewer(s):s.view==='table'?renderTableViewer(s):renderBoardViewer(s);
     const ix=book.sheets.indexOf(s);
-    $('#main').innerHTML=sheetHead(s)+which+`<div class="sheet-bottom-nav"><button ${ix===0?'disabled':''} data-sheet="${book.sheets[Math.max(0,ix-1)].id}">← ${esc(book.sheets[Math.max(0,ix-1)].name)}</button><button ${ix===book.sheets.length-1?'disabled':''} data-sheet="${book.sheets[Math.min(book.sheets.length-1,ix+1)].id}">${esc(book.sheets[Math.min(book.sheets.length-1,ix+1)].name)} →</button></div>`;
+    const family=isGenealogy(s);
+    const familyHead=`<header class="family-document-head"><span class="family-document-kicker">GENEALOGY / SOURCE CHART</span><h1>${esc(s.name.replace(/^(OT-|\(G\)-)/,''))}</h1><p>${s.links.length} 個原始連結 · 按左側工具列縮放與切換視圖 · 可直接捲動整張家譜</p></header>`;
+    $('#main').innerHTML=(family?familyHead:sheetHead(s))+which+(family?'':`<div class="sheet-bottom-nav"><button ${ix===0?'disabled':''} data-sheet="${book.sheets[Math.max(0,ix-1)].id}">← ${esc(book.sheets[Math.max(0,ix-1)].name)}</button><button ${ix===book.sheets.length-1?'disabled':''} data-sheet="${book.sheets[Math.min(book.sheets.length-1,ix+1)].id}">${esc(book.sheets[Math.min(book.sheets.length-1,ix+1)].name)} →</button></div>`);
     if(s.view==='board')buildBoardContent(s);
     if(s.view==='table')buildTableContent(s);
     if(cellRef)setTimeout(()=>focusOn(s,cellRef),100);
@@ -237,11 +241,33 @@
     const r=c[0],col=c[1];return s.merges.find(m=>m[0]===r&&m[1]===col)||[r,col,r,col];
   }
   function renderBoardViewer(s){
-    const isJesus = JESUS_SHEET && s.id===JESUS_SHEET.id;
-    const isGenealogy = s.category==='家譜研究' || isJesus;
-    const jumpButtons = state.viewMode==='list'?'':`<button type="button" class="tool-btn slim" data-scroll-board="top">置頂</button><button type="button" class="tool-btn slim" data-scroll-board="bottom">到底</button>`;
-    const hero = isJesus ? `<div class="genealogy-hero"><div><span class="genealogy-kicker">GENEALOGY · JESUS</span><h2>耶穌家譜</h2><p>將原始 Excel 的家譜結構改為更清楚的閱讀體驗：保留人物位置與延伸連結，同時以更乾淨的版面呈現。</p></div><div class="genealogy-hero-meta"><span>${s.links.length} 個延伸連結</span><span>${s.cells.length} 個節點來源</span></div></div>` : '';
-    return `<section class="viewer-card ${isGenealogy?'genealogy-showcase':''}" id="view-panel">${hero}<div class="viewer-toolbar"><div class="toolbar-left"><button class="tool-btn ${state.viewMode==='list'?'selected':''}" data-board-mode="list">文字閱讀</button><button class="tool-btn ${state.viewMode==='board'?'selected':''}" data-board-mode="board">關係圖譜</button><span class="toolbar-hint">${s.links.length?'綠色節點可點擊延伸家譜':''}</span></div><div class="toolbar-right">${jumpButtons}<div class="board-zoom-controls ${state.viewMode==='list'?'hidden':''}" id="board-zoom-controls"><button type="button" class="tool-btn slim" data-zoom="out" aria-label="縮小">−</button><button type="button" class="tool-btn slim" data-zoom="reset" id="zoom-label">100%</button><button type="button" class="tool-btn slim" data-zoom="in" aria-label="放大">＋</button></div></div></div><div id="board-content"></div><div class="board-explainer">${s.name.startsWith('(G)-')||s.name==='OT-耶穌家譜'?'關係圖譜盡量保留來源檔案中的人物位置和連線。點擊綠色人名即可跳轉延伸家譜；可利用右上角「＋／−」縮放。現在支援自然卷動閱讀，也可按「到底」快速前往末端。':'文字閱讀適合手機，關係圖譜適合橫向閱讀大型資料。點選含有註解的內容可閱讀完整來源文字。'}</div></section><p class="viewer-help">原始 Excel 是完整內容依據；「文字閱讀」只改變排列方式，不會改寫或增減原文。</p>${s.images.length?renderSupplementImages(s):''}`;
+    const family=isGenealogy(s);
+    if(family) return `<section class="genealogy-canvas" id="view-panel"><div id="board-content"></div><div class="genealogy-endnote">原始 Excel 內容、人物位置及原有連線皆保留；有連結的人名可開啟延伸家譜。</div></section>`;
+    return `<section class="viewer-card" id="view-panel"><div class="viewer-toolbar"><div class="toolbar-left"><button class="tool-btn ${state.viewMode==='list'?'selected':''}" data-board-mode="list">文字閱讀</button><button class="tool-btn ${state.viewMode==='board'?'selected':''}" data-board-mode="board">關係圖譜</button><span class="toolbar-hint">${s.links.length?'綠色節點可點擊延伸家譜':''}</span></div><div class="toolbar-right"><div class="board-zoom-controls ${state.viewMode==='list'?'hidden':''}" id="board-zoom-controls"><button type="button" class="tool-btn slim" data-zoom="out" aria-label="縮小">−</button><button type="button" class="tool-btn slim" data-zoom="reset" id="zoom-label">100%</button><button type="button" class="tool-btn slim" data-zoom="in" aria-label="放大">＋</button></div></div></div><div id="board-content"></div><div class="board-explainer">文字閱讀適合手機，關係圖譜適合橫向閱讀大型資料。點選含有註解的內容可閱讀完整來源文字。</div></section>`;
+  }
+  function hueForNode(s,c){
+    const raw=String(s.styles?.[String(c[3])]?.bg||'').trim();
+    if(!/^#[0-9a-f]{6}$/i.test(raw))return 'plain';
+    const n=parseInt(raw.slice(1),16),r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b);
+    if(max-min<34)return 'plain';
+    // Original workbook fill hues, translated into a restrained palette without changing associations.
+    if(r>g*1.14 && r>b*1.16)return g>r*.70?'gold':'rose';
+    if(b>r*1.16 && b>g*1.07)return 'blue';
+    if(b>g*.9&&r>b*.70&&b>r*.8)return 'violet';
+    if(g>r*.98 && g>b*1.05)return 'mint';
+    if(r>g && g>b*1.14)return 'gold';
+    if(b>r*1.07)return 'blue';
+    return 'plain';
+  }
+  function syncGenealogyTools(){
+    const s=state.sheet, family=isGenealogy(s);
+    $('#genealogy-tools')?.classList.toggle('hidden',!family);
+    if(!family)return;
+    $$('#genealogy-tools [data-board-mode]').forEach(x=>x.classList.toggle('active',x.dataset.boardMode===state.viewMode));
+    $('#genealogy-zoom-controls')?.classList.toggle('hidden',state.viewMode==='list');
+    $('#genealogy-zoom-divider')?.classList.toggle('hidden',state.viewMode==='list');
+    if($('#side-zoom-label'))$('#side-zoom-label').textContent=Math.round(state.boardZoom*100)+'%';
   }
   function buildBoardContent(s){
     const el=$('#board-content');if(!el)return;
@@ -266,24 +292,50 @@
       let text=String(c[2]||'');const note=!!c[4],linked=!!c[5];
       const isLabel=(c[1]===1&&c[0]<20)||(c[0]===1);
       const isEnglish=/^[A-Za-z\d.,\s()\-':?]+$/.test(text)&&text.length<40;
-      const classes=['board-node',linked?'link-node':'',note?'note-node':'',isLabel?'label-node':'',isEnglish?'english-node':'',state.focus===refOf(c)?'is-target':''].filter(Boolean).join(' ');
+      const classes=['board-node',isGenealogy(s)?'family-node':'',isGenealogy(s)?'tone-'+hueForNode(s,c):'',linked?'link-node':'',note?'note-node':'',isLabel?'label-node':'',isEnglish?'english-node':'',state.focus===refOf(c)?'is-target':''].filter(Boolean).join(' ');
       const safeTitle=esc(text.slice(0,350)+(note?'\nⓘ 有原始註解':'')+(linked?'\n↗ 點擊延伸家譜':''));
       const attributes=linked?`data-link="${esc(c[5])}"`:(note||text)?`data-note="${s.id}|${refOf(c)}"`:'';
       return `<div class="${classes}" style="left:${left}px;top:${top}px;width:${Math.max(23,width)}px;height:${Math.max(16,height)}px" title="${safeTitle}" ${attributes} data-cell="${refOf(c)}" role="${linked||note?'button':'group'}" ${linked||note?'tabindex="0"':''}>${esc(text||'ⓘ')}</div>`;
     }).join('');
-    el.innerHTML=`<div class="board-viewport ${(s.category==='家譜研究'||(JESUS_SHEET&&s.id===JESUS_SHEET.id))?'genealogy-viewport':''}" id="board-viewport"><div class="board-sizer" id="board-sizer" style="position:relative;width:${dim.w}px;height:${dim.h}px"><div class="board-stage" id="board-stage" style="width:${dim.w}px;height:${dim.h}px"><div class="board-background" style="background-image:url('${s.boardBg}')"></div>${nodes}</div></div></div>`;
+    el.innerHTML=`<div class="board-viewport ${(s.category==='家譜研究'||(JESUS_SHEET&&s.id===JESUS_SHEET.id))?'genealogy-viewport':''}" id="board-viewport"><div class="board-sizer" id="board-sizer" style="position:relative;width:${dim.w}px;height:${dim.h}px"><div class="board-stage" id="board-stage" style="width:${dim.w}px;height:${dim.h}px"><div class="board-background" style="background-image:url('${isGenealogy(s)?s.boardBg.replace(/\.svg$/,'-lines.svg').replace('assets/board-','assets/lines/board-'):s.boardBg}')"></div>${nodes}</div></div></div>`;
     setZoom(state.boardZoom, true);
+    if(isGenealogy(s)) bindGenealogyDrag();
+  }
+  function bindGenealogyDrag(){
+    const surface=$('#board-viewport');if(!surface)return;
+    surface.addEventListener('pointerdown',event=>{
+      if(event.pointerType!=='mouse'||event.button!==0||event.target.closest('.board-node'))return;
+      const sx=event.clientX,sy=event.clientY,scrollX=window.scrollX,scrollY=window.scrollY;
+      surface.classList.add('is-dragging');
+      event.preventDefault();
+      const move=e=>window.scrollTo({left:Math.max(0,scrollX+sx-e.clientX),top:Math.max(0,scrollY+sy-e.clientY),behavior:'instant'});
+      const end=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);surface.classList.remove('is-dragging');};
+      window.addEventListener('pointermove',move);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
+    });
   }
   function setZoom(value,preserve){
     const s=state.sheet;if(!s||s.view!=='board')return;
     const viewport=$('#board-viewport'),stage=$('#board-stage'),sizer=$('#board-sizer');if(!viewport||!stage||!sizer)return;
-    const old=state.boardZoom, next=clamp(value,.35,1.75);
-    const cx=viewport.scrollLeft+viewport.clientWidth/2,cy=viewport.scrollTop+viewport.clientHeight/2;
-    state.boardZoom=next;const dim=dimensions(s);
+    const old=state.boardZoom, next=clamp(value,.35,2.35),family=isGenealogy(s),dim=dimensions(s);
+    let originalX=0,originalY=0,chartLeft=0,chartTop=0;
+    if(family){
+      const rect=viewport.getBoundingClientRect();
+      chartLeft=window.scrollX+rect.left;chartTop=window.scrollY+rect.top;
+      originalX=Math.max(0,(window.scrollX+window.innerWidth/2-chartLeft)/old);
+      originalY=Math.max(0,(window.scrollY+window.innerHeight/2-chartTop)/old);
+    }else{
+      originalX=(viewport.scrollLeft+viewport.clientWidth/2)/old;
+      originalY=(viewport.scrollTop+viewport.clientHeight/2)/old;
+    }
+    state.boardZoom=next;
     sizer.style.width=(dim.w*next)+'px';sizer.style.height=(dim.h*next)+'px';
     stage.style.transform=`scale(${next})`;
-    if(preserve&&next!==old){viewport.scrollLeft=(cx/old)*next-viewport.clientWidth/2;viewport.scrollTop=(cy/old)*next-viewport.clientHeight/2;}
+    if(preserve&&next!==old){
+      if(family)window.scrollTo({left:Math.max(0,chartLeft+originalX*next-window.innerWidth/2),top:Math.max(0,chartTop+originalY*next-window.innerHeight/2),behavior:'instant'});
+      else {viewport.scrollLeft=originalX*next-viewport.clientWidth/2;viewport.scrollTop=originalY*next-viewport.clientHeight/2;}
+    }
     if($('#zoom-label'))$('#zoom-label').textContent=Math.round(next*100)+'%';
+    if($('#side-zoom-label'))$('#side-zoom-label').textContent=Math.round(next*100)+'%';
   }
   function focusOn(s,ref){
     ref=String(ref||'').replace(/\$/g,'');
@@ -296,6 +348,13 @@
       }else{
         const dim=dimensions(s);const viewport=$('#board-viewport');if(!viewport)return;
         let x=dim.x[Math.min(col-1,dim.x.length-1)]||0,y=dim.y[Math.min(row-1,dim.y.length-1)]||0;
+        if(isGenealogy(s)){
+          const rect=viewport.getBoundingClientRect();
+          const left=window.scrollX+rect.left+x*state.boardZoom;
+          const top=window.scrollY+rect.top+y*state.boardZoom;
+          window.scrollTo({left:Math.max(0,left-window.innerWidth*.40),top:Math.max(0,top-120),behavior:'smooth'});
+          return;
+        }
         viewport.scrollLeft=Math.max(0,x*state.boardZoom-viewport.clientWidth*.32);
         const hasInternalY = viewport.scrollHeight > viewport.clientHeight + 4 && getComputedStyle(viewport).overflowY !== 'visible';
         if(hasInternalY) viewport.scrollTop=Math.max(0,y*state.boardZoom-viewport.clientHeight*.3);
@@ -352,12 +411,16 @@
   function route(){
     closeMenu();$('#dialog-root').innerHTML='';
     const r=getRoute();
+    const targetSheet=r.section==='sheet'?byId.get(r.arg):null;
+    const family=isGenealogy(targetSheet);
+    $('.app-shell')?.classList.toggle('genealogy-page',family);
     if(r.section==='sheet')renderSheet(r.arg,r.query.get('cell')||'');
     else if(r.section==='category' && categories.includes(r.arg))renderHome(r.arg);
     else if(r.section==='search')renderSearch(r.query.get('q')||'');
     else renderHome();
     renderNav();
-    if(!r.query.get('cell'))window.scrollTo({top:0,behavior:'instant'});
+    syncGenealogyTools();
+    if(!r.query.get('cell'))window.scrollTo({left:0,top:0,behavior:'instant'});
   }
 
   document.addEventListener('click',event=>{
@@ -376,9 +439,9 @@
     const note=target.closest('[data-note]');if(note){let [id,ref]=note.dataset.note.split('|');openNote(id,ref);return;}
     const image=target.closest('[data-image]');if(image){openImage(image.dataset.image);return;}
     const tableMode=target.closest('[data-table-mode]');if(tableMode&&state.sheet){state.viewMode=tableMode.dataset.tableMode;$$('[data-table-mode]').forEach(x=>x.classList.toggle('selected',x===tableMode));buildTableContent(state.sheet);if(state.focus)setTimeout(()=>focusOn(state.sheet,state.focus),30);return;}
-    const boardMode=target.closest('[data-board-mode]');if(boardMode&&state.sheet){state.viewMode=boardMode.dataset.boardMode;$$('[data-board-mode]').forEach(x=>x.classList.toggle('selected',x===boardMode));buildBoardContent(state.sheet);if(state.focus)setTimeout(()=>focusOn(state.sheet,state.focus),60);return;}
+    const boardMode=target.closest('[data-board-mode]');if(boardMode&&state.sheet){state.viewMode=boardMode.dataset.boardMode;$$('[data-board-mode]').forEach(x=>x.classList.toggle('selected',x===boardMode));buildBoardContent(state.sheet);syncGenealogyTools();if(state.focus)setTimeout(()=>focusOn(state.sheet,state.focus),60);return;}
     const zoom=target.closest('[data-zoom]');if(zoom){let op=zoom.dataset.zoom;setZoom(op==='in'?state.boardZoom*1.2:op==='out'?state.boardZoom/1.2:1,true);return;}
-    const boardScroll=target.closest('[data-scroll-board]');if(boardScroll){const vp=$('#board-viewport');if(vp){const to=boardScroll.dataset.scrollBoard==='bottom' ? vp.offsetTop + vp.scrollHeight + 40 : Math.max(0,vp.offsetTop-120);window.scrollTo({top:to,behavior:'smooth'});}return;}
+    const boardScroll=target.closest('[data-scroll-board]');if(boardScroll){const vp=$('#board-viewport');if(vp){const rect=vp.getBoundingClientRect();const chartTop=rect.top+window.scrollY;const to=boardScroll.dataset.scrollBoard==='bottom' ? chartTop + vp.scrollHeight - window.innerHeight + 96 : Math.max(0,chartTop-90);window.scrollTo({top:Math.max(0,to),behavior:'smooth'});}return;}
     if(target.closest('#load-more')&&state.sheet){state.tableLimit+=90;buildTableContent(state.sheet);return;}
     if(target.closest('#search-load')){state.searchLimit+=70;buildResults(getRoute().query.get('q')||'');return;}
   });

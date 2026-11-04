@@ -58,3 +58,105 @@
 @media(max-width:1200px){.genealogy-showcase .list-nodes{grid-template-columns:1fr}}
 @media(max-width:900px){.sidebar-toggle{display:none}.genealogy-hero{padding:18px 18px 16px;flex-direction:column}.genealogy-viewport{min-height:520px}}
 @media(max-width:650px){.genealogy-hero h2{font-size:26px}.genealogy-hero p{font-size:12px}.genealogy-showcase .list-nodes{padding:12px;gap:10px}.genealogy-showcase .node-item .node-text{font-size:15px}.genealogy-viewport{min-height:460px}}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   V3: full-page genealogy atlas.  The graph itself uses the original Excel
+   cell geometry + exported connector lines; the new styling is presentation.
+   ═══════════════════════════════════════════════════════════════════════ */
+.topbar-ghost{display:none}
+.sidebar{z-index:90}
+.sidebar-bottom{padding:16px 2px 0;margin-top:auto}
+.sidebar-bottom .side-section-title{padding-left:12px}
+.side-section-title{color:var(--muted);font-weight:800;font-size:10px;letter-spacing:.14em;margin:6px 4px 9px}
+.side-tool-divider{height:1px;background:var(--line);margin:12px 6px}
+.genealogy-tools{display:grid;gap:4px;padding:18px 0 0;margin-top:16px;border-top:1px solid var(--line)}
+.side-zoom-tools{display:grid;gap:3px}
+.side-tool{display:flex;align-items:center;gap:12px;border:0;border-radius:12px;background:transparent;color:var(--ink-soft);width:100%;padding:10px 13px;text-align:left;font-size:12px;min-height:40px;font-weight:700;white-space:nowrap;transition:background .14s,color .14s}
+.side-tool svg{flex:none;width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.side-tool:hover,.side-tool.active{background:var(--muted-bg);color:var(--accent-text)}
+.side-tool.active{font-weight:800}
+.side-tool span:not(.theme-side-symbol){overflow:hidden;text-overflow:ellipsis}
+.theme-side-symbol{width:18px;height:18px;display:grid;place-items:center;font-size:19px;flex:none}
+.mobile-menu-fab{display:none}
+/* Every persistent control lives in the left navigation rail. */
+.app-shell.sidebar-collapsed .genealogy-tools{margin-top:8px;padding-top:10px}
+.app-shell.sidebar-collapsed .side-section-title,.app-shell.sidebar-collapsed .side-tool span:not(.theme-side-symbol),.app-shell.sidebar-collapsed .side-tool-divider{display:none!important}
+.app-shell.sidebar-collapsed .side-tool{width:48px;height:44px;min-height:44px;justify-content:center;padding:0;gap:0;margin:0 auto}
+.app-shell.sidebar-collapsed .sidebar-bottom{padding:10px 0 0;margin-top:auto;display:grid!important;gap:3px;border-top:1px solid var(--line)}
+.app-shell.sidebar-collapsed .sidebar-bottom .side-section-title{display:none}
+.app-shell.sidebar-collapsed .sidebar-bottom .side-tool{display:flex}
+/* Page canvas, rather than a nested scrolling card: normal browser scrollbars. */
+.app-shell.genealogy-page{width:max-content;min-width:100%;align-items:stretch}
+.app-shell.genealogy-page .workspace{width:max-content;min-width:calc(100vw - var(--side-width));max-width:none;flex:0 0 auto;margin-left:var(--side-width);overflow:visible}
+.app-shell.genealogy-page .main{max-width:none;margin:0;width:max-content;min-width:calc(100vw - var(--side-width));padding:0 0 16px;overflow:visible;flex:1 1 auto}
+.app-shell.genealogy-page .site-footer{display:none}
+.app-shell.genealogy-page .family-document-head{display:flex;align-items:center;gap:18px;padding:23px 32px 18px;min-height:94px;min-width:calc(100vw - var(--side-width));width:max-content;max-width:100vw}
+.family-document-kicker{font-size:10px;font-weight:800;letter-spacing:.16em;color:var(--brand);white-space:nowrap}
+.family-document-head h1{margin:0;font-size:clamp(19px,2.1vw,29px);color:var(--ink);line-height:1.3;white-space:nowrap}
+.family-document-head p{color:var(--muted);font-size:11px;margin:0;white-space:nowrap}
+.app-shell.genealogy-page .genealogy-canvas{width:max-content;min-width:calc(100vw - var(--side-width));border:0;border-radius:0;box-shadow:none;background:transparent;overflow:visible}
+.app-shell.genealogy-page #board-content{width:max-content;min-width:calc(100vw - var(--side-width));overflow:visible}
+.app-shell.genealogy-page .board-viewport{width:max-content!important;height:auto!important;min-height:0!important;overflow:visible!important;overscroll-behavior:auto!important;padding:0!important;border:0!important;background:none!important}
+.app-shell.genealogy-page .board-sizer{overflow:visible!important}
+.app-shell.genealogy-page .board-background{opacity:.70;filter:none;background-position:top left;background-size:100% 100%;}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-background{opacity:.47;filter:saturate(.65) brightness(1.15)}
+.app-shell.genealogy-page .genealogy-endnote{width:min(100vw,900px);padding:22px 32px 45px;color:var(--muted);font-size:11px}
+/* Reframe original worksheet cell-color associations as soft genealogy colors. */
+.app-shell.genealogy-page .board-node.family-node{--tone-bg:transparent;--tone-border:transparent;--tone-ink:var(--ink-soft);background:var(--tone-bg);border:1px solid var(--tone-border);border-radius:5px;box-shadow:none;color:var(--tone-ink);padding:1px 3px;font-size:11px;font-weight:650;letter-spacing:-.01em;overflow:hidden;white-space:pre-wrap;line-height:1.15;text-overflow:clip;transition:box-shadow .12s ease,background .12s ease;border-color .12s ease;}
+.app-shell.genealogy-page .board-node.tone-gold{--tone-bg:#f5e6ab;--tone-border:#dfc970;--tone-ink:#66521f}
+.app-shell.genealogy-page .board-node.tone-rose{--tone-bg:#f4cbcb;--tone-border:#dc9d9b;--tone-ink:#803e44}
+.app-shell.genealogy-page .board-node.tone-blue{--tone-bg:#cde4f0;--tone-border:#96c0d5;--tone-ink:#28556b}
+.app-shell.genealogy-page .board-node.tone-violet{--tone-bg:#e4d8ed;--tone-border:#c2a8d5;--tone-ink:#5a3e70}
+.app-shell.genealogy-page .board-node.tone-mint{--tone-bg:#d5eadc;--tone-border:#abcab6;--tone-ink:#36594a}
+.app-shell.genealogy-page .board-node.label-node.family-node{font-weight:800;background:color-mix(in srgb,var(--tone-bg) 80%,var(--paper));font-size:10px;letter-spacing:0;border-radius:4px;}
+.app-shell.genealogy-page .board-node.english-node.family-node{font-size:10px;font-weight:500;color:var(--tone-ink)}
+.app-shell.genealogy-page .board-node.link-node.family-node{border:1.3px solid #468e76;cursor:pointer;box-shadow:inset 0 -2px 0 rgba(38,119,89,.28);font-weight:800}
+.app-shell.genealogy-page .board-node.note-node.family-node{border-bottom:1.5px dashed #669b88;cursor:pointer}
+.app-shell.genealogy-page .board-node.family-node:hover{z-index:30;background:var(--paper)!important;border:1px solid var(--brand);border-radius:7px;box-shadow:0 7px 25px rgba(10,30,25,.17);overflow:visible;height:auto!important;min-height:22px;max-width:320px;width:max-content!important;min-width:70px;white-space:pre-wrap;padding:6px 8px;font-size:12px;color:var(--ink)}
+.app-shell.genealogy-page .board-node.is-target{outline:3px solid #e5b55e;outline-offset:2px;background:#fff0c8!important;color:#66421f}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-gold{--tone-bg:#594e2f;--tone-border:#8b7947;--tone-ink:#f5e7b8}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-rose{--tone-bg:#613d40;--tone-border:#916368;--tone-ink:#f5d3d4}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-blue{--tone-bg:#274451;--tone-border:#457183;--tone-ink:#d6e9f2}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-violet{--tone-bg:#4b3c5b;--tone-border:#705b8d;--tone-ink:#e8d9ee}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-mint{--tone-bg:#294a3b;--tone-border:#497660;--tone-ink:#d5eedc}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-node.tone-plain{--tone-bg:transparent;--tone-border:transparent;--tone-ink:var(--ink-soft)}
+/* The list mode is also document-flow, with no nested scroller. */
+.app-shell.genealogy-page:has(.list-nodes) .main{width:auto;min-width:calc(100vw - var(--side-width))}
+.app-shell.genealogy-page:has(.list-nodes) #board-content{width:auto;min-width:calc(100vw - var(--side-width))}
+.app-shell.genealogy-page .list-nodes{width:calc(100vw - var(--side-width));max-width:1220px;min-width:350px;padding:26px 34px;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:13px}
+.app-shell.genealogy-page .node-item{background:var(--paper);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:17px}
+.app-shell.genealogy-page .node-item .node-text{font-size:15px}
+/* Free screen width when rail is collapsed */
+.app-shell.sidebar-collapsed.genealogy-page .workspace{margin-left:88px;min-width:calc(100vw - 88px)}
+.app-shell.sidebar-collapsed.genealogy-page .main,.app-shell.sidebar-collapsed.genealogy-page .genealogy-canvas,.app-shell.sidebar-collapsed.genealogy-page #board-content{min-width:calc(100vw - 88px)}
+.app-shell.sidebar-collapsed.genealogy-page .family-document-head{min-width:calc(100vw - 88px)}
+.app-shell.sidebar-collapsed.genealogy-page .list-nodes{width:calc(100vw - 88px)}
+@media(max-width:900px){
+ .mobile-menu-fab{display:grid;place-items:center;position:fixed;z-index:75;top:12px;left:12px;width:42px;height:42px;border-radius:13px;background:var(--paper);border:1px solid var(--line-strong);box-shadow:var(--shadow-float);color:var(--ink)}
+ .mobile-menu-fab svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+ .app-shell.genealogy-page .workspace{margin-left:0;min-width:100vw}
+ .app-shell.genealogy-page .main,.app-shell.genealogy-page .genealogy-canvas,.app-shell.genealogy-page #board-content{min-width:100vw}
+ .app-shell.genealogy-page .family-document-head{min-width:100vw;padding:18px 18px 16px 70px;gap:8px;flex-wrap:wrap}
+ .app-shell.genealogy-page .family-document-head h1{font-size:21px}
+ .app-shell.genealogy-page .family-document-head p{width:100%;font-size:10px;white-space:normal}
+ .app-shell.genealogy-page .genealogy-endnote{padding:15px 18px 38px}
+ .app-shell.genealogy-page .list-nodes{width:100vw;max-width:100vw;min-width:0;grid-template-columns:1fr;padding:14px}
+ .sidebar.open{width:min(300px,90vw)}
+ .app-shell .sidebar-bottom{margin-top:auto}
+}
+
+/* Keep the frequently used genealogy commands visible; let categories scroll in the rail. */
+.app-shell.genealogy-page .sidebar{overflow-y:hidden}
+.app-shell.genealogy-page #side-quick{flex:0 0 auto}
+.app-shell.genealogy-page .genealogy-tools{flex:0 0 auto;margin-top:8px;padding:10px 0 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.app-shell.genealogy-page #side-nav{flex:1 1 auto;min-height:95px;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;padding-top:10px}
+.app-shell.genealogy-page .sidebar-bottom{flex:0 0 auto;margin-top:6px}
+.app-shell.genealogy-page .board-background{filter:saturate(.62)}
+:root[data-theme="dark"] .app-shell.genealogy-page .board-background{filter:saturate(.48) brightness(1.2)}
+@media(max-width:900px){
+ .app-shell.genealogy-page .sidebar{overflow-y:auto}
+ .app-shell.genealogy-page #side-nav{min-height:80px;overflow-y:auto}
+}
+
+.app-shell.genealogy-page .genealogy-viewport{cursor:grab}
+.app-shell.genealogy-page .genealogy-viewport.is-dragging{cursor:grabbing;user-select:none}

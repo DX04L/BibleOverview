@@ -20,15 +20,31 @@
         <span class="brand-copy"><strong>聖經概覽</strong><small>BIBLE OVERVIEW</small></span>
       </a>
       <div class="sidebar-head"><div class="nav-label">探索資料</div><button id="sidebar-toggle" class="sidebar-toggle" type="button" aria-label="收合側邊欄" title="收合側邊欄"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button></div>
-      <nav id="side-nav" class="side-nav"></nav>
-      <div class="sidebar-bottom"><span class="sidebar-line"></span><p>忠實保留原始資料<br>以更清楚的方式閱讀</p><span class="source-link">資料由 Firebase Cloud Firestore 提供</span></div>
+      <nav id="side-quick" class="side-nav" aria-label="常用頁面"></nav>
+      <div id="genealogy-tools" class="genealogy-tools hidden" aria-label="家譜控制工具">
+        <div class="side-section-title">家譜瀏覽</div>
+        <button class="side-tool active" type="button" data-board-mode="board" title="家譜圖譜" aria-label="家譜圖譜"><svg viewBox="0 0 24 24"><path d="M12 3v6M5 15v-4h14v4M5 15v6M12 15v6M19 15v6"/><circle cx="5" cy="21" r="1"/><circle cx="12" cy="21" r="1"/><circle cx="19" cy="21" r="1"/></svg><span>家譜圖譜</span></button>
+        <button class="side-tool" type="button" data-board-mode="list" title="文字閱讀" aria-label="文字閱讀"><svg viewBox="0 0 24 24"><path d="M8 5h12M8 12h12M8 19h12"/><circle cx="4" cy="5" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="19" r="1"/></svg><span>文字閱讀</span></button>
+        <div class="side-tool-divider" id="genealogy-zoom-divider"></div>
+        <div class="side-zoom-tools" id="genealogy-zoom-controls">
+          <button class="side-tool" type="button" data-zoom="out" title="縮小家譜" aria-label="縮小家譜"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg><span>縮小</span></button>
+          <button class="side-tool" type="button" data-zoom="reset" title="恢復 100%" aria-label="恢復 100%"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="side-zoom-label">100%</span></button>
+          <button class="side-tool" type="button" data-zoom="in" title="放大家譜" aria-label="放大家譜"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg><span>放大</span></button>
+        </div>
+        <div class="side-tool-divider"></div>
+        <button class="side-tool" type="button" data-scroll-board="top" title="回到家譜頂部" aria-label="回到家譜頂部"><svg viewBox="0 0 24 24"><path d="M12 20V5m-6 6 6-6 6 6M5 3h14"/></svg><span>回到頂部</span></button>
+        <button class="side-tool" type="button" data-scroll-board="bottom" title="前往家譜底部" aria-label="前往家譜底部"><svg viewBox="0 0 24 24"><path d="M12 4v15m-6-6 6 6 6-6M5 21h14"/></svg><span>前往底部</span></button>
+      </div>
+      <nav id="side-nav" class="side-nav" aria-label="資料分類"></nav>
+      <div class="sidebar-bottom"><div class="side-section-title">網站工具</div>
+        <button class="side-tool" type="button" id="search-shortcut" title="全站搜尋" aria-label="全站搜尋"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.8 4.8"/></svg><span>全站搜尋</span></button>
+        <button class="side-tool" type="button" id="theme-btn" title="切換深淺色模式" aria-label="切換深淺色模式"><span class="theme-side-symbol" id="theme-symbol">☾</span><span id="theme-label">深色模式</span></button>
+      </div>
     </aside>
     <div class="mobile-scrim" id="mobile-scrim"></div>
     <div class="workspace">
-      <header class="topbar">
-        <div class="topbar-left"><button id="menu-btn" class="icon-btn menu-btn" type="button" aria-label="開啟選單" title="開啟選單"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><span id="top-section" class="top-section">資料導覽</span><span class="top-divider"></span><span id="top-page" class="top-page">首頁</span></div>
-        <div class="topbar-right"><button type="button" class="icon-btn search-shortcut" id="search-shortcut" title="搜尋全站" aria-label="搜尋全站"><svg viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.7"/><path d="m16 16 4.8 4.8"/></svg></button><button type="button" class="theme-btn" id="theme-btn" title="切換深淺色模式" aria-label="切換深淺色模式"><span id="theme-symbol">☾</span><span id="theme-label">深色模式</span></button></div>
-      </header>
+      <div class="topbar-ghost" aria-hidden="true"><span id="top-section"></span><span id="top-page"></span></div>
+      <button id="menu-btn" class="mobile-menu-fab" type="button" title="開啟導覽及家譜工具" aria-label="開啟導覽及家譜工具"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <main id="main" class="main" tabindex="-1"><div class="loading-view">正在載入內容…</div></main>
       <footer class="site-footer">聖經概覽 <span>·</span> 資料來自原始《聖經概覽》 <span>·</span> 透過 Firebase 讀取</footer>
     </div>
