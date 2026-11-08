@@ -1,0 +1,52 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+:root {
+  --bg-canvas: #F8F7F3;
+  --text-primary: #243B46;
+  --text-secondary: #687983;
+  --border-subtle: #D8DFE2;
+  --edge-default: #61717B;
+
+  --source-luke: #7796B8;
+  --source-matthew: #CBD1D2;
+  --source-shared: #80B8A5;
+  --source-other: #AAC89B;
+
+  --accent-rose: #C7817D;
+  --accent-gold: #D7B66B;
+  --status-disputed: #E09F3E;
+}
+
+[data-theme="dark"] {
+  --bg-canvas: #151D22;
+  --text-primary: #ECEFF1;
+  --text-secondary: #90A4AE;
+  --border-subtle: #2C3E48;
+  --edge-default: #78909C;
+
+  --source-luke: #4A6B8A;
+  --source-matthew: #455054;
+  --source-shared: #3F6B5C;
+  --source-other: #526D47;
+
+  --accent-rose: #E57373;
+  --accent-gold: #FDD835;
+  --status-disputed: #FFB74D;
+}
+
+body {
+  @apply bg-canvas text-text-primary antialiased overflow-hidden m-0 p-0;
+}
+
+/* React Flow overrrides */
+.react-flow__pane {
+  cursor: grab;
+}
+.react-flow__pane.dragging {
+  cursor: grabbing;
+}
+.react-flow__edge-path {
+  stroke-width: 1.5;
+}
